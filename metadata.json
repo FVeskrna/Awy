@@ -1,0 +1,5 @@
+{
+  "name": "AWY - Always With You",
+  "description": "A personal assistant shell with a modular micro-frontend architecture, featuring a customizable dashboard and authentic macOS-style dock navigation.",
+  "requestFramePermissions": []
+}

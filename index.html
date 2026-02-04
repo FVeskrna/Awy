@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AWY - Professional Workspace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            },
+            colors: {
+              workspace: {
+                canvas: '#FFFFFF',
+                panel: '#FFFFFF',
+                sidebar: '#F7F8FA',
+                border: '#D1D4D9',
+                accent: '#2471ED',
+                text: '#191E23',
+                secondary: '#808080',
+                selection: '#EDF3FF'
+              }
+            },
+            borderRadius: {
+              'xl': '12px',
+              '2xl': '16px'
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        background-color: #FFFFFF;
+        color: #191E23;
+        -webkit-font-smoothing: antialiased;
+      }
+      .workspace-card {
+        background: #FFFFFF;
+        border: 1px solid #D1D4D9;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .workspace-card:hover {
+        border-color: #2471ED;
+        box-shadow: 0 8px 24px rgba(36, 113, 237, 0.08);
+      }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #D1D4D9; border-radius: 10px; }
+      ::-webkit-scrollbar-thumb:hover { background: #808080; }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
