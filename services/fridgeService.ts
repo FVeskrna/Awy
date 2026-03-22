@@ -24,7 +24,8 @@ export const fridgeService = {
       content: s.content,
       language: s.language,
       tag: s.tag,
-      updatedAt: Number(s.updated_at)
+      updatedAt: Number(s.updated_at),
+      isPinned: s.is_pinned ?? false,
     }));
   },
 
@@ -65,7 +66,8 @@ export const fridgeService = {
       content: s.content,
       language: s.language,
       tag: s.tag,
-      updated_at: s.updatedAt
+      updated_at: s.updatedAt,
+      is_pinned: s.isPinned ?? false,
     }));
 
     const { error } = await supabase

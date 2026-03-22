@@ -68,9 +68,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     });
 
+    // 3. Listen for global 401 events from supabase client wrapper
+    const handle401 = () => {
+      console.warn('AuthProvider: Received 401 event. Signing out user.');
+      signOutUser();
+    };
+    window.addEventListener('supabase:auth:401', handle401);
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      window.removeEventListener('supabase:auth:401', handle401);
     };
   }, []);
 

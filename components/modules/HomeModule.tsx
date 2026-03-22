@@ -1,237 +1,277 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import {
-    Zap, AlertTriangle, Battery, Shield, ArrowRight, LayoutDashboard,
-    Focus, BarChart3, CheckSquare, Clock
-} from 'lucide-react';
-import { taskService } from '../../services/taskService';
-import { assetService } from '../../services/assetService';
-import { mentalLoadService } from '../../services/mentalLoadService';
-import { commandService } from '../../services/commandService';
-import { Task } from './TaskModule';
-import { Asset, LoadEntry } from '../../types';
-import { ModuleHeader } from '../ModuleHeader';
 
-export const HomeWidget: React.FC<{ isEditMode: boolean }> = ({ isEditMode }) => {
-    return (
-        <div className="h-full flex flex-col items-center justify-center text-workspace-secondary" onClick={() => !isEditMode && (window.location.hash = '#dashboard')}>
-            <LayoutDashboard size={24} className="mb-2 text-workspace-accent" />
-            <span className="text-[10px] font-black uppercase tracking-widest">HQ</span>
-        </div>
-    );
-};
+import React, { useState, useEffect } from 'react';
+import { LayoutDashboard, Plus, Check, X, Grid, Settings2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../services/authContext';
+import { dashboardService } from '../../services/dashboardService';
+import { getAllModules } from '../../services/moduleRegistry';
+import { DashboardWidget } from '../../types';
+import { ModuleHeader } from '../ModuleHeader';
+import { WidgetContainer } from '../dashboard/WidgetContainer';
 
 export const HomeApp: React.FC = () => {
-    const [tasks, setTasks] = useState<Task[]>([]);
-    const [assets, setAssets] = useState<Asset[]>([]);
-    const [loadEntries, setLoadEntries] = useState<LoadEntry[]>([]);
-    const [isDeepWork, setIsDeepWork] = useState(false);
+    const { user } = useAuth();
+    const [widgets, setWidgets] = useState<DashboardWidget[]>([]);
+    const [originalWidgets, setOriginalWidgets] = useState<DashboardWidget[]>([]);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [isAdding, setIsAdding] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    // HTML5 Drag and Drop state
+    const [draggedId, setDraggedId] = useState<string | null>(null);
+    const [overId, setOverId] = useState<string | null>(null);
 
     useEffect(() => {
-        let mounted = true;
+        if (user) {
+            dashboardService.getLayout(user.uid).then(data => {
+                setWidgets(data);
+                setLoading(false);
+            });
+        }
+    }, [user]);
 
-        const loadData = async () => {
-            try {
-                const [t, a, l] = await Promise.all([
-                    taskService.getAll(),
-                    assetService.getAssets(),
-                    mentalLoadService.getEntries()
-                ]);
+    const handleSave = async () => {
+        if (user) {
+            await dashboardService.saveLayout(user.uid, widgets);
+            setIsEditMode(false);
+        }
+    };
 
-                if (mounted) {
-                    setTasks(t);
-                    setAssets(a);
-                    setLoadEntries(l);
-                }
-            } catch (e) {
-                console.warn("HomeModule: Data load interrupted", e);
-            }
+    const handleCancel = () => {
+        setWidgets(originalWidgets);
+        setIsEditMode(false);
+    };
+
+    const handleEnterEditMode = () => {
+        setOriginalWidgets([...widgets]);
+        setIsEditMode(true);
+    };
+
+    const handleAddWidget = (moduleId: string) => {
+        const newWidget: DashboardWidget = {
+            id: `${moduleId}-${Date.now()}`,
+            moduleId,
+            x: 0, y: 0, w: 1, h: 1,
         };
+        setWidgets(prev => [...prev, newWidget]);
+        setIsAdding(false);
+    };
 
-        loadData();
+    const handleRemoveWidget = (id: string) => {
+        setWidgets(prev => prev.filter(w => w.id !== id));
+    };
 
-        // Register "Deep Work" command
-        const deepWorkCmd = {
-            id: 'home-deepwork',
-            label: 'Toggle Deep Work Mode',
-            category: 'Focus' as const,
-            action: () => setIsDeepWork(prev => !prev)
-        };
-        commandService.registerCommand(deepWorkCmd);
+    // --- Drag handlers ---
+    const handleDragStart = (id: string, e: React.DragEvent) => {
+        setDraggedId(id);
+        // Set drag image to a blank element so we control the visual entirely
+        const blank = document.createElement('div');
+        blank.style.width = '1px';
+        blank.style.height = '1px';
+        document.body.appendChild(blank);
+        e.dataTransfer.setDragImage(blank, 0, 0);
+        setTimeout(() => document.body.removeChild(blank), 0);
+    };
 
-        return () => {
-            mounted = false;
-            commandService.unregisterCommand('home-deepwork');
-        };
-    }, []);
+    const handleDragOver = (id: string, e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (id !== draggedId) {
+            setOverId(id);
+        }
+    };
 
-    // Aggregation Logic
-    const highPriorityTasks = useMemo(() => {
-        return tasks.filter(t => !t.completed && t.priority === 'high').slice(0, 5);
-    }, [tasks]);
+    const handleDrop = (targetId: string) => {
+        if (!draggedId || draggedId === targetId) return;
 
-    const expiringAssets = useMemo(() => {
-        const thirtyDaysFromNow = new Date();
-        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-        return assets.filter(a => {
-            if (!a.warrantyDate) return false;
-            const wDate = new Date(a.warrantyDate);
-            return wDate > new Date() && wDate < thirtyDaysFromNow;
+        setWidgets(prev => {
+            const fromIndex = prev.findIndex(w => w.id === draggedId);
+            const toIndex = prev.findIndex(w => w.id === targetId);
+            if (fromIndex === -1 || toIndex === -1) return prev;
+            const next = [...prev];
+            const [moved] = next.splice(fromIndex, 1);
+            next.splice(toIndex, 0, moved);
+            return next;
         });
-    }, [assets]);
+    };
 
-    const recentLoad = useMemo(() => loadEntries.slice(-5), [loadEntries]);
+    const handleDragEnd = () => {
+        setDraggedId(null);
+        setOverId(null);
+    };
 
-    // Simple Mental Load Pulse (Trend)
-    const loadTrend = useMemo(() => {
-        if (recentLoad.length < 2) return 'neutral';
-        const last = recentLoad[recentLoad.length - 1].level;
-        const prev = recentLoad[recentLoad.length - 2].level;
-        return last > prev ? 'rising' : last < prev ? 'falling' : 'stable';
-    }, [recentLoad]);
-
-    if (isDeepWork) {
-        const focusTask = highPriorityTasks[0];
-        return (
-            <div className="h-full flex flex-col items-center justify-center bg-workspace-canvas animate-in fade-in duration-700">
-                <div className="max-w-2xl w-full text-center space-y-8">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-workspace-accent/10 text-workspace-accent border border-workspace-accent/20">
-                        <Zap size={14} className="animate-pulse" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Deep Work Active</span>
-                    </div>
-
-                    {focusTask ? (
-                        <div className="space-y-4">
-                            <h1 className="text-4xl md:text-6xl font-black text-workspace-text tracking-tight uppercase leading-none">
-                                {focusTask.title}
-                            </h1>
-                            <div className="flex items-center justify-center gap-6 text-workspace-secondary">
-                                <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest border border-workspace-border px-3 py-1.5 rounded-lg">
-                                    <Clock size={14} /> {focusTask.estimate}
-                                </span>
-                                <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest border border-workspace-border px-3 py-1.5 rounded-lg">
-                                    <AlertTriangle size={14} className="text-red-500" /> High Priority
-                                </span>
-                            </div>
-                        </div>
-                    ) : (
-                        <h1 className="text-4xl font-black text-workspace-secondary/30 uppercase tracking-widest">
-                            No Critical Targets
-                        </h1>
-                    )}
-
-                    <button
-                        onClick={() => setIsDeepWork(false)}
-                        className="mt-12 text-[10px] font-black text-workspace-secondary hover:text-workspace-text uppercase tracking-[0.2em] transition-colors"
-                    >
-                        [ Exit Focus Protocol ]
-                    </button>
-                </div>
-            </div>
-        );
-    }
+    if (loading) return null;
 
     return (
-        <div className="flex flex-col h-full bg-workspace-canvas animate-in fade-in duration-500 overflow-hidden overflow-y-auto">
+        <div className="flex flex-col h-full bg-workspace-canvas animate-in fade-in duration-500 overflow-hidden overflow-y-auto no-scrollbar">
             <ModuleHeader
-                title="Home"
+                title="Command Center"
                 subtitle={<>
-                    <span className="w-1.5 h-1.5 rounded-full bg-workspace-accent animate-pulse" /> Command Center
+                    <span className="w-1.5 h-1.5 rounded-full bg-workspace-accent animate-pulse" /> Live Status
                 </>}
                 icon={LayoutDashboard}
-            />
-
-            <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Urgent Tasks Section */}
-                <section className="lg:col-span-2 space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-black uppercase tracking-tight flex items-center gap-3">
-                            <AlertTriangle size={20} className="text-red-500" />
-                            Critical Operations
-                        </h2>
-                        <span className="text-[10px] font-bold text-workspace-secondary uppercase tracking-widest bg-workspace-sidebar px-2 py-1 rounded">
-                            {highPriorityTasks.length} Pending
-                        </span>
-                    </div>
-
-                    <div className="grid gap-3">
-                        {highPriorityTasks.length > 0 ? (
-                            highPriorityTasks.map(task => (
-                                <div key={task.id} className="flex items-center justify-between p-4 bg-white border-l-4 border-red-500 rounded-r-xl shadow-sm hover:shadow-md transition-all group">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-2 bg-red-50 rounded-lg text-red-500">
-                                            <CheckSquare size={18} />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-sm font-black uppercase tracking-tight text-workspace-text group-hover:text-red-500 transition-colors">{task.title}</h3>
-                                            <p className="text-[10px] font-bold text-workspace-secondary uppercase tracking-widest mt-0.5">Est: {task.estimate}</p>
-                                        </div>
-                                    </div>
-                                    <button onClick={() => { }} className="p-2 hover:bg-workspace-sidebar rounded-lg text-workspace-secondary hover:text-workspace-text transition-colors">
-                                        <ArrowRight size={16} />
-                                    </button>
-                                </div>
-                            ))
+                actionButton={
+                    <div className="flex gap-2">
+                        {isEditMode ? (
+                            <>
+                                <button
+                                    onClick={() => setIsAdding(true)}
+                                    className="flex items-center gap-2 px-4 py-2 border border-workspace-border rounded-xl text-[10px] font-black uppercase tracking-widest text-workspace-accent bg-white hover:bg-workspace-accent hover:text-white transition-all shadow-sm"
+                                >
+                                    <Plus size={14} /> Add Widget
+                                </button>
+                                <button
+                                    onClick={handleCancel}
+                                    className="flex items-center gap-2 px-4 py-2 border border-workspace-border rounded-xl text-[10px] font-black uppercase tracking-widest text-red-500 bg-white hover:bg-red-50 transition-all shadow-sm"
+                                >
+                                    <X size={14} /> Discard
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    className="flex items-center gap-2 px-6 py-2 bg-workspace-accent text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-workspace-accent/20 active:scale-95 transition-all"
+                                >
+                                    <Check size={16} /> Save Layout
+                                </button>
+                            </>
                         ) : (
-                            <div className="p-8 border border-workspace-border/40 rounded-xl flex flex-col items-center justify-center text-workspace-secondary opacity-50 bg-workspace-sidebar/30">
-                                <CheckSquare size={32} className="mb-3" />
-                                <span className="text-xs font-black uppercase tracking-widest">All Clear</span>
-                            </div>
+                            <button
+                                onClick={handleEnterEditMode}
+                                className="flex items-center gap-2 px-6 py-2 border border-workspace-border rounded-xl text-[10px] font-black uppercase tracking-widest text-workspace-secondary bg-white hover:text-workspace-accent transition-all shadow-sm"
+                            >
+                                <Settings2 size={16} /> Customize
+                            </button>
                         )}
                     </div>
-                </section>
+                }
+            />
 
-                {/* Sidebar Column */}
-                <div className="space-y-8">
-                    {/* Mental Load Pulse */}
-                    <section className="bg-slate-900 text-white p-6 rounded-[24px] relative overflow-hidden">
-                        <div className="relative z-10">
-                            <h2 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
-                                <Battery size={16} /> Cognitive Load
-                            </h2>
-                            <div className="flex items-end gap-1 h-32 mb-4">
-                                {recentLoad.map((entry, i) => (
-                                    <div
-                                        key={i}
-                                        className="flex-1 bg-emerald-500/20 rounded-t-sm relative group"
-                                        style={{ height: `${(entry.level / 5) * 100}%` }}
-                                    >
-                                        <div className="absolute bottom-0 left-0 right-0 bg-emerald-500 transition-all duration-500" style={{ height: '4px' }} />
-                                    </div>
-                                ))}
-                                {recentLoad.length === 0 && <div className="w-full text-center text-xs text-slate-600 font-mono">NO DATA</div>}
-                            </div>
-                            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                                <span>Trend: <span className={loadTrend === 'rising' ? 'text-red-400' : 'text-emerald-400'}>{loadTrend.toUpperCase()}</span></span>
-                                <span>Last 5 Entries</span>
-                            </div>
-                        </div>
-                        <div className="absolute top-0 right-0 p-32 bg-emerald-500/10 blur-[80px] rounded-full pointer-events-none" />
-                    </section>
+            <div className="flex-1 p-4 md:p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-[minmax(200px,_auto)] grid-flow-row-dense">
+                    {widgets.map((w) => {
+                        const isDragging = draggedId === w.id;
+                        const isOver = overId === w.id;
 
-                    {/* Expiring Warranties */}
-                    <section className="space-y-4">
-                        <h2 className="text-sm font-black uppercase tracking-widest text-workspace-secondary flex items-center gap-2">
-                            <Shield size={16} /> Asset Watch
-                        </h2>
-                        <div className="space-y-2">
-                            {expiringAssets.length > 0 ? (
-                                expiringAssets.map(asset => (
-                                    <div key={asset.id} className="p-3 bg-white border border-workspace-border rounded-xl flex items-center justify-between">
-                                        <div className="min-w-0">
-                                            <div className="text-xs font-bold text-workspace-text truncate">{asset.productName}</div>
-                                            <div className="text-[9px] font-bold text-red-500 uppercase tracking-widest mt-0.5">Expires {new Date(asset.warrantyDate!).toLocaleDateString()}</div>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="p-4 bg-workspace-sidebar/30 border border-workspace-border/40 rounded-xl text-center">
-                                    <span className="text-[10px] font-bold text-workspace-secondary uppercase tracking-widest">No Risks Detected</span>
-                                </div>
-                            )}
-                        </div>
-                    </section>
+                        return (
+                            <motion.div
+                                key={w.id}
+                                layout
+                                transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                                className={[
+                                    w.w === 2 ? 'md:col-span-2' : '',
+                                    w.h === 2 ? 'row-span-2' : '',
+                                    isEditMode ? 'cursor-grab active:cursor-grabbing' : '',
+                                    isDragging ? 'opacity-30 scale-95' : 'opacity-100 scale-100',
+                                    isOver ? 'ring-2 ring-workspace-accent ring-offset-2 rounded-[24px]' : '',
+                                    'transition-[opacity,transform] duration-150',
+                                ].filter(Boolean).join(' ')}
+                                draggable={isEditMode}
+                                onDragStart={(e) => handleDragStart(w.id, e as unknown as React.DragEvent)}
+                                onDragOver={(e) => handleDragOver(w.id, e as unknown as React.DragEvent)}
+                                onDrop={() => handleDrop(w.id)}
+                                onDragEnd={handleDragEnd}
+                                onDragLeave={() => setOverId(null)}
+                            >
+                                <WidgetContainer
+                                    id={w.id}
+                                    moduleId={w.moduleId}
+                                    isEditMode={isEditMode}
+                                    onRemove={handleRemoveWidget}
+                                />
+                            </motion.div>
+                        );
+                    })}
+
+                    {widgets.length === 0 && !isEditMode && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="col-span-full h-96 flex flex-col items-center justify-center text-workspace-secondary/30"
+                        >
+                            <Grid size={64} strokeWidth={1} />
+                            <p className="mt-4 text-xs font-black uppercase tracking-widest">Dashboard is empty</p>
+                            <button
+                                onClick={handleEnterEditMode}
+                                className="mt-6 px-6 py-2 bg-workspace-accent/10 border border-workspace-accent/20 text-workspace-accent text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-workspace-accent/20 transition-colors"
+                            >
+                                Start Customizing
+                            </button>
+                        </motion.div>
+                    )}
+
+                    {isEditMode && (
+                        <motion.div
+                            layout
+                            key="add-slot"
+                            onClick={() => setIsAdding(true)}
+                            className="border-2 border-dashed border-workspace-accent/30 rounded-[24px] flex flex-col items-center justify-center gap-3 text-workspace-accent/50 hover:border-workspace-accent hover:text-workspace-accent hover:bg-workspace-accent/5 cursor-pointer transition-all min-h-[200px]"
+                        >
+                            <Plus size={28} strokeWidth={1.5} />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Add Widget</span>
+                        </motion.div>
+                    )}
                 </div>
             </div>
+
+            {/* Widget Gallery Overlay */}
+            <AnimatePresence>
+                {isAdding && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+                        onClick={(e) => e.target === e.currentTarget && setIsAdding(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                            className="bg-white rounded-[32px] w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
+                        >
+                            <div className="p-8 border-b border-workspace-border flex justify-between items-center bg-workspace-sidebar/30">
+                                <div>
+                                    <h3 className="text-xl font-black uppercase tracking-tight">Widget Gallery</h3>
+                                    <p className="text-[10px] font-bold text-workspace-secondary uppercase tracking-widest mt-1">Enhance your command center</p>
+                                </div>
+                                <button onClick={() => setIsAdding(false)} className="p-2 hover:bg-white rounded-xl transition-colors">
+                                    <X size={24} className="text-workspace-secondary" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 no-scrollbar">
+                                {getAllModules().filter(m => m.id !== 'home').map(m => {
+                                    const alreadyAdded = widgets.some(w => w.moduleId === m.id);
+                                    return (
+                                        <button
+                                            key={m.id}
+                                            onClick={() => !alreadyAdded && handleAddWidget(m.id)}
+                                            disabled={alreadyAdded}
+                                            className={`flex items-center gap-4 p-4 text-left border rounded-2xl transition-all group ${
+                                                alreadyAdded
+                                                    ? 'border-workspace-border/30 opacity-40 cursor-not-allowed'
+                                                    : 'border-workspace-border hover:border-workspace-accent hover:bg-workspace-accent/5'
+                                            }`}
+                                        >
+                                            <div className={`p-3 rounded-xl transition-colors ${
+                                                alreadyAdded
+                                                    ? 'bg-workspace-sidebar text-workspace-secondary'
+                                                    : 'bg-workspace-sidebar text-workspace-secondary group-hover:text-workspace-accent group-hover:bg-workspace-accent/10'
+                                            }`}>
+                                                <m.icon size={24} />
+                                            </div>
+                                            <div>
+                                                <div className="text-[10px] font-black uppercase tracking-widest text-workspace-text">{m.name}</div>
+                                                <div className="text-[9px] font-bold text-workspace-secondary uppercase tracking-widest line-clamp-1">{m.description}</div>
+                                                {alreadyAdded && <div className="text-[8px] font-black text-workspace-accent uppercase tracking-widest mt-0.5">Added</div>}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

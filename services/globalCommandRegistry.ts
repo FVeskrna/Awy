@@ -1,7 +1,9 @@
 import { commandService } from './commandService';
+import { toolRegistry } from '../config/toolRegistry';
 
 const NAV_PREFIX = 'Go to';
 const ACTION_PREFIX = 'Create';
+const UTIL_PREFIX = 'Tool:';
 
 export const globalCommandRegistry = {
     register: () => {
@@ -13,6 +15,7 @@ export const globalCommandRegistry = {
             { id: 'nav-assets', label: `${NAV_PREFIX} Assets`, shortcut: 'G A', view: 'asset' },
             { id: 'nav-meeting', label: `${NAV_PREFIX} Navigator`, shortcut: 'G N', view: 'meeting' },
             { id: 'nav-deepwork', label: 'Enter Focus Mode', category: 'Focus', shortcut: 'G D', view: 'deepwork' },
+            { id: 'nav-toolbox', label: `${NAV_PREFIX} Toolbox`, shortcut: 'G X', view: 'toolbox' },
         ];
 
         navs.forEach(n => {
@@ -23,6 +26,18 @@ export const globalCommandRegistry = {
                 shortcut: n.shortcut,
                 action: () => {
                     window.location.hash = `#${n.view}`;
+                }
+            });
+        });
+
+        // --- Toolbox Commands (Dynamic) ---
+        toolRegistry.forEach(tool => {
+            commandService.registerCommand({
+                id: `tool-${tool.id}`,
+                label: `${UTIL_PREFIX} ${tool.name}`,
+                category: 'Utility',
+                action: () => {
+                    window.location.hash = `#toolbox?tool=${tool.id}`;
                 }
             });
         });
@@ -48,7 +63,7 @@ export const globalCommandRegistry = {
                     if (window.location.hash === newHash) {
                         // If already there, trigger a manual dispatch or just ensure the component reacts
                         // For now, simpler is creating a unique event or just toggling
-                        window.dispatchEvent(new HashChangeEvent('hashchange'));
+                        window.dispatchEvent(new Event('hashchange'));
                     } else {
                         window.location.hash = newHash;
                     }
@@ -60,9 +75,14 @@ export const globalCommandRegistry = {
     unregister: () => {
         // Clean up if needed (usually on app unmount, which rarely happens)
         const ids = [
-            'nav-home', 'nav-tasks', 'nav-fridge', 'nav-assets', 'nav-meeting', 'nav-deepwork',
+            'nav-home', 'nav-tasks', 'nav-fridge', 'nav-assets', 'nav-meeting', 'nav-deepwork', 'nav-toolbox',
             'act-task', 'act-snippet', 'act-asset', 'act-node'
         ];
         ids.forEach(id => commandService.unregisterCommand(id));
+
+        // Unregister dynamic tools
+        toolRegistry.forEach(tool => {
+            commandService.unregisterCommand(`tool-${tool.id}`);
+        });
     }
 };

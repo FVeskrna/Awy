@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Asset } from '../../../types';
 import { getWarrantyStatus } from '../../../utils/assetUtils';
-import { Trash2, ShoppingBag, Calendar, DollarSign, ExternalLink, ShieldCheck, ShieldAlert, Tag } from 'lucide-react';
+import { Trash2, ShoppingBag, Calendar, ExternalLink, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { useDevice } from '../../../hooks/useDevice';
+import { MobileAssetCard } from './MobileAssetCard';
 
 interface ReceiptListProps {
     assets: Asset[];
@@ -10,8 +12,7 @@ interface ReceiptListProps {
 
 export const ReceiptList: React.FC<ReceiptListProps> = ({ assets, onDelete }) => {
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-
-    // removed local getWarrantyStatus function
+    const { isMobile } = useDevice();
 
     if (assets.length === 0) {
         return (
@@ -28,12 +29,12 @@ export const ReceiptList: React.FC<ReceiptListProps> = ({ assets, onDelete }) =>
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-20">
             {assets.map((asset) => {
-                const { isValid, label, expirationDate } = getWarrantyStatus(asset.purchaseDate, asset.warrantyDurationMonths);
+                const { isValid, label } = getWarrantyStatus(asset.purchaseDate, asset.warrantyDurationMonths);
 
-                return (
-                    <div key={asset.id} className="group relative bg-white border border-workspace-border/60 rounded-xl p-4 hover:border-workspace-accent/50 transition-all hover:shadow-sm">
-                        {/* Delete Confirmation Overlay */}
-                        {deleteConfirmId === asset.id && (
+                const Content = (
+                    <div className="group relative bg-white border border-workspace-border/60 rounded-xl p-4 hover:border-workspace-accent/50 transition-all hover:shadow-sm">
+                        {/* Delete Confirmation Overlay - Only for Desktop or explicit click */}
+                        {deleteConfirmId === asset.id && !isMobile && (
                             <div className="absolute inset-0 bg-white/90 backdrop-blur-[2px] z-10 rounded-xl flex flex-col items-center justify-center p-4 text-center animate-in fade-in zoom-in-95 duration-200">
                                 <p className="text-[10px] font-bold text-red-500 uppercase tracking-wide mb-3">Delete this receipt?</p>
                                 <div className="flex gap-2">
@@ -102,16 +103,31 @@ export const ReceiptList: React.FC<ReceiptListProps> = ({ assets, onDelete }) =>
                                 <span className="text-[9px] font-bold text-workspace-secondary/50 uppercase tracking-wide">No Image</span>
                             )}
 
-                            <button
-                                onClick={() => setDeleteConfirmId(asset.id)}
-                                className="p-1.5 text-workspace-secondary hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
-                                title="Delete Receipt"
-                            >
-                                <Trash2 size={12} />
-                            </button>
+                            {!isMobile && (
+                                <button
+                                    onClick={() => setDeleteConfirmId(asset.id)}
+                                    className="p-1.5 text-workspace-secondary hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                    title="Delete Receipt"
+                                >
+                                    <Trash2 size={12} />
+                                </button>
+                            )}
                         </div>
                     </div>
-                )
+                );
+
+                if (isMobile) {
+                    return (
+                        <MobileAssetCard
+                            key={asset.id}
+                            asset={asset}
+                            onDelete={onDelete}
+                            onShare={(a) => alert(`Share functionality for ${a.productName} coming soon!`)}
+                        />
+                    );
+                }
+
+                return <div key={asset.id}>{Content}</div>;
             })}
         </div>
     );

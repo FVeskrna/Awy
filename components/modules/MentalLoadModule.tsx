@@ -101,6 +101,15 @@ export const MentalLoadApp: React.FC = () => {
 
   useEffect(() => {
     mentalLoadService.getEntries().then(setEntries);
+    const handleHash = () => {
+      if (window.location.hash.includes('action=log')) {
+        setIsModalOpen(true);
+        history.replaceState(null, '', '#mentalload');
+      }
+    };
+    window.addEventListener('hashchange', handleHash);
+    handleHash();
+    return () => window.removeEventListener('hashchange', handleHash);
   }, []);
 
   const handleLog = async () => {
@@ -134,7 +143,7 @@ export const MentalLoadApp: React.FC = () => {
         <button onClick={() => setIsHistoryOpen(true)} className="p-2.5 bg-workspace-sidebar text-workspace-secondary hover:text-workspace-accent border border-workspace-border rounded-xl transition-all shadow-sm"><History size={18} /></button>
       </ModuleHeader>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar p-12 bg-workspace-sidebar/10">
+      <div className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-12 bg-workspace-sidebar/10">
         <div className="max-w-6xl mx-auto space-y-8 pb-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-8 bg-white border border-workspace-border/50 rounded-[24px] shadow-sm flex items-center gap-6 group hover:border-workspace-accent transition-all">

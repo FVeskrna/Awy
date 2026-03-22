@@ -154,7 +154,7 @@ export const MusicApp: React.FC = () => {
     });
   };
 
-  const isAnyPlaying = Object.values(states).some(s => s.playing);
+  const isAnyPlaying = Object.values(states).some((s: SoundState) => s.playing);
 
   return (
     <div className="flex flex-col h-full bg-workspace-canvas animate-in fade-in duration-500">
@@ -175,14 +175,14 @@ export const MusicApp: React.FC = () => {
         ) : undefined}
       />
 
-      <div className="flex-1 overflow-y-auto no-scrollbar p-10">
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-10">
+        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
           {SOUNDS.map(sound => {
             const state = states[sound.id];
             return (
               <div
                 key={sound.id}
-                className={`p-8 rounded-3xl border transition-all duration-500 ${state.playing
+                className={`p-6 md:p-8 rounded-3xl border transition-all duration-500 ${state.playing
                   ? 'bg-white border-workspace-accent shadow-xl shadow-workspace-accent/5'
                   : 'bg-workspace-sidebar/30 border-workspace-border/50 grayscale opacity-60'
                   }`}
@@ -228,13 +228,13 @@ export const MusicApp: React.FC = () => {
         </div>
       </div>
 
-      <footer className="h-[90px] shrink-0 border-t border-workspace-border/20 px-12 flex items-center justify-center bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
-        <div className="max-w-4xl mx-auto w-full flex items-center gap-12">
-          <div className="flex items-center gap-3 min-w-[140px]">
+      <footer className="h-auto md:h-[90px] shrink-0 border-t border-workspace-border/20 px-6 py-4 md:py-0 md:px-12 flex flex-col md:flex-row items-center justify-center bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.02)] gap-4 md:gap-12">
+        <div className="max-w-4xl mx-auto w-full flex flex-col md:flex-row items-center gap-4 md:gap-12">
+          <div className="flex items-center gap-3 w-full md:w-auto md:min-w-[140px]">
             <Volume2 className="text-workspace-accent" size={20} />
             <span className="text-[10px] font-black text-workspace-secondary uppercase tracking-[0.2em]">Master Output</span>
           </div>
-          <div className="flex-1 relative group">
+          <div className="flex-1 relative group w-full">
             <input
               type="range"
               min="0"
@@ -245,13 +245,13 @@ export const MusicApp: React.FC = () => {
               className="w-full accent-workspace-accent h-2 bg-workspace-sidebar border border-workspace-border/50 rounded-full appearance-none cursor-pointer"
             />
           </div>
-          <div className="flex items-center gap-6">
-            <div className="flex flex-col items-end">
+          <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-start">
+            <div className="flex flex-col items-start md:items-end">
               <span className="text-[9px] font-bold text-workspace-secondary uppercase tracking-widest">Active Channels</span>
-              <span className="text-lg font-black text-workspace-text">{Object.values(states).filter(s => s.playing).length} / 4</span>
+              <span className="text-lg font-black text-workspace-text">{Object.values(states).filter((s: SoundState) => s.playing).length} / 4</span>
             </div>
-            <div className="w-[1px] h-8 bg-workspace-border/30" />
-            <div className="text-xs font-mono font-bold text-workspace-accent w-12">{Math.round(masterVolume * 100)}%</div>
+            <div className="hidden md:block w-[1px] h-8 bg-workspace-border/30" />
+            <div className="text-xs font-mono font-bold text-workspace-accent w-12 text-right">{Math.round(masterVolume * 100)}%</div>
           </div>
         </div>
       </footer>

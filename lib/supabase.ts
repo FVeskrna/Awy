@@ -20,6 +20,21 @@ export const supabase = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true
+    },
+    global: {
+      fetch: async (url, options) => {
+        const response = await fetch(url, options);
+
+        if (response.status === 401) {
+          // Dispatch a custom event that AuthContext can listen to
+          // We also set a flag so the login screen knows WHY the user was responsible
+          console.warn('Global fetch interceptor caught 401. Triggering logout sequence.');
+          localStorage.setItem('auth_session_expired', 'true');
+          window.dispatchEvent(new Event('supabase:auth:401'));
+        }
+
+        return response;
+      }
     }
   }
 );

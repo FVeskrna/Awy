@@ -60,7 +60,18 @@ export const ChecklistApp: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newName, setNewName] = useState('');
 
-  useEffect(() => { habitService.getData().then(setData); }, []);
+  useEffect(() => {
+    habitService.getData().then(setData);
+    const handleHash = () => {
+      if (window.location.hash.includes('action=create')) {
+        setIsModalOpen(true);
+        history.replaceState(null, '', '#checklist');
+      }
+    };
+    window.addEventListener('hashchange', handleHash);
+    handleHash();
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
 
   const save = async (newItems: Habit[]) => {
     const newData = { ...data, items: newItems };

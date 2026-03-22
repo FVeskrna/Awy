@@ -1,13 +1,13 @@
-
 import {
   CheckSquare, Music, Grid, Wrench, Brain,
-  Activity, ListTodo, Zap, IceCream, Globe, Camera
+  Activity, ListTodo, Zap, IceCream, Globe, Camera, Layers,
+  Plus, Play
 } from 'lucide-react';
 import React from 'react';
 import { ModuleManifest } from '../types';
-import { TaskWidget, TaskApp } from '../components/modules/TaskModule';
+import { TaskWidget, TaskApp } from '../components/modules/tasks';
 import { MusicWidget, MusicApp } from '../components/modules/MusicModule';
-import { NotesWidget, NotesApp } from '../components/modules/NotesModule';
+import { NotesWidget, NotesApp } from '../components/modules/notes';
 import { ToolboxWidget, ToolboxApp } from '../components/modules/ToolboxModule';
 import { DeepWorkWidget, DeepWorkApp } from '../components/modules/DeepWorkModule';
 import { HealthWidget, HealthApp } from '../components/modules/HealthModule';
@@ -16,6 +16,7 @@ import { MentalLoadWidget, MentalLoadApp } from '../components/modules/MentalLoa
 import { FridgeWidget, FridgeApp } from '../components/modules/FridgeModule';
 import { MeetingNavigatorWidget, MeetingNavigatorApp } from '../components/modules/MeetingNavigatorModule';
 import { AssetWidget, AssetApp } from '../components/modules/AssetModule';
+import { WorklogStreamWidget, WorklogApp as WorklogStreamApp } from '../components/modules/worklogs';
 
 export const MODULES: Record<string, ModuleManifest> = {
   tasks: {
@@ -25,6 +26,7 @@ export const MODULES: Record<string, ModuleManifest> = {
     description: 'Manage your daily to-dos',
     AppComponent: TaskApp,
     WidgetComponent: TaskWidget,
+    quickAction: { label: 'New Task', hash: '#tasks?action=create', icon: Plus },
   },
   checklist: {
     id: 'checklist',
@@ -33,6 +35,7 @@ export const MODULES: Record<string, ModuleManifest> = {
     description: 'Daily habits and streaks',
     AppComponent: ChecklistApp,
     WidgetComponent: ChecklistWidget,
+    quickAction: { label: 'New Habit', hash: '#checklist?action=create', icon: Plus },
   },
   mentalload: {
     id: 'mentalload',
@@ -41,6 +44,7 @@ export const MODULES: Record<string, ModuleManifest> = {
     description: 'Track mental bandwidth',
     AppComponent: MentalLoadApp,
     WidgetComponent: MentalLoadWidget,
+    quickAction: { label: 'Log Entry', hash: '#mentalload?action=log', icon: Plus },
   },
   deepwork: {
     id: 'deepwork',
@@ -54,6 +58,7 @@ export const MODULES: Record<string, ModuleManifest> = {
       });
     },
     WidgetComponent: DeepWorkWidget,
+    quickAction: { label: 'Start Session', hash: '#deepwork', icon: Play },
   },
   notes: {
     id: 'notes',
@@ -62,6 +67,7 @@ export const MODULES: Record<string, ModuleManifest> = {
     description: 'Thoughts and lists',
     AppComponent: NotesApp,
     WidgetComponent: NotesWidget,
+    quickAction: { label: 'New Note', hash: '#notes?action=create', icon: Plus },
   },
   meeting: {
     id: 'meeting',
@@ -70,6 +76,7 @@ export const MODULES: Record<string, ModuleManifest> = {
     description: 'Global time-zone sync',
     AppComponent: MeetingNavigatorApp,
     WidgetComponent: MeetingNavigatorWidget,
+    quickAction: { label: 'Add Location', hash: '#meeting?action=create', icon: Plus },
   },
   fridge: {
     id: 'fridge',
@@ -78,6 +85,7 @@ export const MODULES: Record<string, ModuleManifest> = {
     description: 'Quick snippets gallery',
     AppComponent: FridgeApp,
     WidgetComponent: FridgeWidget,
+    quickAction: { label: 'New Snippet', hash: '#fridge?action=create', icon: Plus },
   },
   toolbox: {
     id: 'toolbox',
@@ -110,6 +118,16 @@ export const MODULES: Record<string, ModuleManifest> = {
     description: 'Warranty & Receipt Scanner',
     AppComponent: AssetApp,
     WidgetComponent: AssetWidget,
+    quickAction: { label: 'Add Asset', hash: '#asset?action=create', icon: Plus },
+  },
+  worklog: {
+    id: 'worklog',
+    name: 'Worklog Stream',
+    icon: Layers,
+    description: 'High-speed manual Jira entry',
+    AppComponent: WorklogStreamApp,
+    WidgetComponent: WorklogStreamWidget,
+    quickAction: { label: 'Log Work', hash: '#worklog?action=log', icon: Plus },
   },
 };
 

@@ -140,7 +140,7 @@ export const HealthApp: React.FC = () => {
         </div>
       </ModuleHeader>
 
-      <div className="flex-1 p-12 overflow-y-auto no-scrollbar bg-workspace-sidebar/10">
+      <div className="flex-1 p-4 md:p-12 overflow-y-auto no-scrollbar bg-workspace-sidebar/10">
         {services.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-workspace-secondary">
             <Activity size={48} className="mb-4 opacity-20" />

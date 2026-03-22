@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { 
-  Timer, Pause, Play, RotateCcw, AlertTriangle, 
+import {
+  Timer, Pause, Play, RotateCcw, AlertTriangle,
   CheckCircle2, X, Activity, Brain, Target, Clock, Zap
 } from 'lucide-react';
 
@@ -62,7 +62,7 @@ export const DeepWorkWidget: React.FC = () => {
     };
 
     window.addEventListener('awy-timer-update', handleUpdate);
-    
+
     // Internal ticker for the widget to countdown locally if no event received
     const ticker = setInterval(() => {
       setActiveSession(prev => {
@@ -105,12 +105,12 @@ export const DeepWorkWidget: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="mt-4 space-y-2">
           <div className="w-full h-1.5 bg-workspace-sidebar rounded-full overflow-hidden border border-workspace-border/50">
-            <div 
-              className="h-full bg-workspace-accent transition-all duration-1000" 
-              style={{ width: `${100 - progress}%` }} 
+            <div
+              className="h-full bg-workspace-accent transition-all duration-1000"
+              style={{ width: `${100 - progress}%` }}
             />
           </div>
           <div className="flex justify-between text-[9px] font-bold uppercase tracking-widest text-workspace-secondary">
@@ -140,9 +140,9 @@ export const DeepWorkWidget: React.FC = () => {
         </div>
         <div className="flex gap-1 h-8 items-end">
           {stats.slice(-7).map((s, i) => (
-            <div 
-              key={i} 
-              className="flex-1 bg-workspace-accent rounded-t-sm" 
+            <div
+              key={i}
+              className="flex-1 bg-workspace-accent rounded-t-sm"
               style={{ height: `${Math.min(100, (s.duration / 1500) * 100)}%`, opacity: 0.3 + (i * 0.1) }}
             />
           ))}
@@ -172,7 +172,7 @@ export const DeepWorkApp: React.FC<{ taskId?: string; taskTitle?: string; onExit
         const elapsed = Math.floor((Date.now() - state.lastUpdate) / 1000);
         adjustedTime = Math.max(0, state.timeLeft - elapsed);
       }
-      
+
       setSelectedMinutes(state.selectedMinutes);
       setTimeLeft(adjustedTime);
       setIsActive(state.isActive);
@@ -264,7 +264,7 @@ export const DeepWorkApp: React.FC<{ taskId?: string; taskTitle?: string; onExit
   if (isConfiguring) {
     return (
       <div className="fixed inset-0 z-[200] bg-workspace-canvas flex flex-col items-center justify-center text-workspace-text animate-in fade-in zoom-in-95 duration-300">
-        <button 
+        <button
           onClick={onExit}
           className="absolute top-10 right-10 p-3 hover:bg-workspace-sidebar rounded-full transition-all text-workspace-secondary hover:text-workspace-text"
         >
@@ -275,22 +275,21 @@ export const DeepWorkApp: React.FC<{ taskId?: string; taskTitle?: string; onExit
           <div className="w-20 h-20 bg-workspace-accent/10 text-workspace-accent rounded-3xl flex items-center justify-center mb-8">
             <Brain size={40} strokeWidth={2.5} />
           </div>
-          
+
           <h1 className="text-4xl font-black tracking-tight mb-2">Deep Work Protocol</h1>
           <p className="text-workspace-secondary mb-12 text-center font-medium max-w-sm">
             Configure your focus parameters to enter high-productivity flow state.
           </p>
 
-          <div className="grid grid-cols-2 gap-4 w-full mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full mb-12">
             {presets.map((preset) => (
               <button
                 key={preset.label}
                 onClick={() => setSelectedMinutes(preset.mins)}
-                className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all ${
-                  selectedMinutes === preset.mins 
-                  ? 'border-workspace-accent bg-workspace-selection text-workspace-accent shadow-lg shadow-workspace-accent/10' 
+                className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all ${selectedMinutes === preset.mins
+                  ? 'border-workspace-accent bg-workspace-selection text-workspace-accent shadow-lg shadow-workspace-accent/10'
                   : 'border-workspace-border hover:border-workspace-accent/40 bg-white text-workspace-secondary'
-                }`}
+                  }`}
               >
                 <preset.icon size={24} className="mb-2" />
                 <span className="text-sm font-bold uppercase tracking-widest">{preset.label}</span>
@@ -304,17 +303,17 @@ export const DeepWorkApp: React.FC<{ taskId?: string; taskTitle?: string; onExit
               <span className="text-[10px] font-black uppercase tracking-widest text-workspace-secondary">Custom Duration</span>
               <span className="text-lg font-bold text-workspace-accent">{selectedMinutes} Minutes</span>
             </div>
-            <input 
-              type="range" 
-              min="1" 
-              max="180" 
+            <input
+              type="range"
+              min="1"
+              max="180"
               value={selectedMinutes}
               onChange={(e) => setSelectedMinutes(parseInt(e.target.value))}
               className="w-full accent-workspace-accent cursor-pointer"
             />
           </div>
 
-          <button 
+          <button
             onClick={handleStartSession}
             className="w-full py-5 bg-workspace-text text-white rounded-2xl font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-workspace-accent transition-all active:scale-[0.98] flex items-center justify-center gap-3"
           >
@@ -328,7 +327,7 @@ export const DeepWorkApp: React.FC<{ taskId?: string; taskTitle?: string; onExit
 
   return (
     <div className="fixed inset-0 z-[200] bg-workspace-text flex flex-col items-center justify-center text-white animate-in fade-in duration-500">
-      <button 
+      <button
         onClick={onExit}
         className="absolute top-10 right-10 p-3 hover:bg-white/10 rounded-full transition-all text-white/70 hover:text-white"
       >
@@ -346,21 +345,21 @@ export const DeepWorkApp: React.FC<{ taskId?: string; taskTitle?: string; onExit
         </div>
 
         <div className="flex items-center gap-8 mb-20">
-          <button 
+          <button
             onClick={() => setTimeLeft(selectedMinutes * 60)}
             className="p-6 bg-white/5 border border-white/10 rounded-3xl hover:bg-white/10 transition-all"
           >
             <RotateCcw size={24} />
           </button>
-          
-          <button 
+
+          <button
             onClick={() => setIsActive(!isActive)}
             className={`w-24 h-24 rounded-full flex items-center justify-center transition-all shadow-2xl ${isActive ? 'bg-white text-workspace-text scale-110' : 'bg-workspace-accent text-white hover:scale-105'}`}
           >
             {isActive ? <Pause size={40} fill="currentColor" /> : <Play size={40} fill="currentColor" className="ml-2" />}
           </button>
 
-          <button 
+          <button
             onClick={() => setDistractions(d => d + 1)}
             className="flex flex-col items-center gap-2 p-6 bg-red-500/10 border border-red-500/20 text-red-400 rounded-3xl hover:bg-red-500/20 transition-all"
           >
@@ -369,18 +368,18 @@ export const DeepWorkApp: React.FC<{ taskId?: string; taskTitle?: string; onExit
           </button>
         </div>
 
-        <div className="grid grid-cols-3 gap-12 w-full pt-12 border-t border-white/10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 w-full pt-12 border-t border-white/10 text-center md:text-left">
           <div>
             <div className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-2">Efficiency</div>
             <div className="text-xl font-bold">{Math.max(0, 100 - (distractions * 5))}%</div>
           </div>
           <div className="flex justify-center items-center">
-             <button 
-               onClick={handleEndSession}
-               className="px-8 py-3 bg-white/5 hover:bg-white text-white hover:text-workspace-text border border-white/20 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
-             >
-               Complete
-             </button>
+            <button
+              onClick={handleEndSession}
+              className="px-8 py-3 bg-white/5 hover:bg-white text-white hover:text-workspace-text border border-white/20 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
+            >
+              Complete
+            </button>
           </div>
           <div>
             <div className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-2">Goal</div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../services/authContext';
 import { Command, ArrowRight, Mail, Lock, User } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const EmailAuthForm = ({ loading }: { loading: boolean }) => {
   const { signInWithEmail, signUpWithEmail } = useAuth();
@@ -23,6 +23,14 @@ const EmailAuthForm = ({ loading }: { loading: boolean }) => {
       setError(err.message || 'Authentication failed');
     }
   };
+
+  useEffect(() => {
+    const expired = localStorage.getItem('auth_session_expired');
+    if (expired === 'true') {
+      setError('Your session has expired. Please sign in again.');
+      localStorage.removeItem('auth_session_expired');
+    }
+  }, []);
 
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-3">
@@ -64,7 +72,13 @@ const EmailAuthForm = ({ loading }: { loading: boolean }) => {
       <div className="text-center">
         <button
           type="button"
-          onClick={() => setIsSignUp(!isSignUp)}
+          onClick={() => {
+            if (!isSignUp) {
+              setError('Sign up is not yet available.');
+              return;
+            }
+            setIsSignUp(!isSignUp);
+          }}
           className="text-sm text-workspace-secondary hover:text-workspace-text transition-colors"
         >
           {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
@@ -94,6 +108,7 @@ export const LoginScreen: React.FC = () => {
         <div className="w-full space-y-4">
           <EmailAuthForm loading={loading} />
 
+          {/* Google Login Disabled
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-gray-200"></span>
@@ -116,6 +131,7 @@ export const LoginScreen: React.FC = () => {
             </svg>
             {loading ? 'Authenticating...' : 'Sign in with Google'}
           </button>
+          */}
         </div>
 
         <p className="mt-8 text-[10px] text-workspace-secondary uppercase tracking-widest font-bold">

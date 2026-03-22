@@ -56,6 +56,7 @@ export const authService = {
       const age = Date.now() - parseInt(loginTimestamp, 10);
       if (age > MAX_SESSION_AGE) {
         console.warn('authService: Max session age exceeded (72h). Enforcing fresh login.');
+        localStorage.setItem('auth_session_expired', 'true');
         await this.signOut();
         return null;
       }

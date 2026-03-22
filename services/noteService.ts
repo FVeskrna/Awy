@@ -144,5 +144,26 @@ export const noteService = {
       .upsert(dbFolders);
 
     if (error) console.error('Error saving folders:', error);
+  },
+
+  async saveNote(note: Note, userId: string): Promise<void> {
+    if (!userId) return;
+
+    const dbNote = {
+      id: note.id,
+      user_id: userId,
+      title: note.title,
+      content: note.content,
+      category: note.category,
+      is_pinned: note.isPinned,
+      created_at: note.createdAt,
+      updated_at: new Date().toISOString()
+    };
+
+    const { error } = await supabase
+      .from('notes')
+      .upsert(dbNote);
+
+    if (error) console.error('Error saving single note:', error);
   }
 };

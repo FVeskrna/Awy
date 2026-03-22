@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Copy, Check, Search, Plus, X, Trash2, IceCream, Tag, Code2, Hash
+  Copy, Check, Search, Plus, X, Trash2, IceCream, Pin
 } from 'lucide-react';
 import { fridgeService } from '../../services/fridgeService';
 import { Snippet } from '../../types';
@@ -41,12 +41,24 @@ export const FridgeWidget: React.FC<{ isEditMode: boolean }> = ({ isEditMode }) 
     fridgeService.getAll().then(setSnippets);
   }, []);
 
-  const latest = useMemo(() =>
-    [...snippets].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 3),
-    [snippets]);
+  const displayed = useMemo(() => {
+    const pinned = snippets.filter(s => s.isPinned).sort((a, b) => b.updatedAt - a.updatedAt);
+    const rest = snippets.filter(s => !s.isPinned).sort((a, b) => b.updatedAt - a.updatedAt);
+    return [...pinned, ...rest].slice(0, 4);
+  }, [snippets]);
+
   return (
     <div className="h-full flex flex-col gap-2" onClick={() => !isEditMode && (window.location.hash = '#fridge')}>
-      {/* ... */}
+      {displayed.map(s => (
+        <div key={s.id} className="flex items-center gap-2.5 p-2.5 rounded-xl bg-workspace-sidebar/30 border border-workspace-border/20 min-w-0">
+          {s.isPinned && <Pin size={10} className="text-workspace-accent shrink-0" fill="currentColor" />}
+          <span className="text-[10px] font-bold text-workspace-text truncate flex-1">{s.title}</span>
+          <span className="text-[8px] font-black uppercase tracking-widest text-workspace-secondary/50 shrink-0 px-1.5 py-0.5 bg-workspace-selection rounded">{s.language}</span>
+        </div>
+      ))}
+      {displayed.length === 0 && (
+        <div className="h-full flex items-center justify-center opacity-30 text-[9px] font-black uppercase tracking-widest">Empty</div>
+      )}
     </div>
   );
 };
@@ -86,12 +98,13 @@ export const FridgeApp: React.FC = () => {
   }, []);
 
   const filtered = useMemo(() => {
-    return snippets
-      .filter(s =>
-        s.title.toLowerCase().includes(search.toLowerCase()) ||
-        s.tag.toLowerCase().includes(search.toLowerCase())
-      )
-      .sort((a, b) => b.updatedAt - a.updatedAt);
+    const matches = snippets.filter(s =>
+      s.title.toLowerCase().includes(search.toLowerCase()) ||
+      s.tag.toLowerCase().includes(search.toLowerCase())
+    );
+    const pinned = matches.filter(s => s.isPinned).sort((a, b) => b.updatedAt - a.updatedAt);
+    const rest = matches.filter(s => !s.isPinned).sort((a, b) => b.updatedAt - a.updatedAt);
+    return [...pinned, ...rest];
   }, [snippets, search]);
 
   const handleOpenModal = (s?: Snippet) => {
@@ -139,6 +152,13 @@ export const FridgeApp: React.FC = () => {
       await fridgeService.saveAll(updated);
     }
   };
+
+  const handleTogglePin = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = snippets.map(s => s.id === id ? { ...s, isPinned: !s.isPinned } : s);
+    setSnippets(updated);
+    await fridgeService.saveAll(updated);
+  };
   return (
     <div className="flex flex-col h-full bg-workspace-canvas animate-in fade-in duration-500 overflow-hidden">
       <ModuleHeader
@@ -166,8 +186,8 @@ export const FridgeApp: React.FC = () => {
         </div>
       </ModuleHeader>
       {/* ... */}
-      <div className="flex-1 overflow-y-auto p-10 no-scrollbar bg-workspace-sidebar/10">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="flex-1 overflow-y-auto p-4 md:p-10 no-scrollbar bg-workspace-sidebar/10">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {filtered.map(s => (
             <div
               key={s.id}
@@ -176,7 +196,10 @@ export const FridgeApp: React.FC = () => {
             >
               <div className="p-6 pb-4 border-b border-workspace-border/20 flex justify-between items-start">
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-sm font-black text-workspace-text truncate uppercase tracking-tight">{s.title}</h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    {s.isPinned && <Pin size={11} className="text-workspace-accent shrink-0" fill="currentColor" />}
+                    <h3 className="text-sm font-black text-workspace-text truncate uppercase tracking-tight">{s.title}</h3>
+                  </div>
                   <div className="flex items-center gap-2 mt-2">
                     <span className="px-2 py-0.5 bg-workspace-selection text-workspace-accent text-[8px] font-black uppercase rounded tracking-widest border border-workspace-accent/10">
                       {s.tag}
@@ -186,7 +209,16 @@ export const FridgeApp: React.FC = () => {
                     </span>
                   </div>
                 </div>
-                <CopyButton content={s.content} className="shadow-none" />
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={(e) => handleTogglePin(s.id, e)}
+                    className={`p-2 rounded-lg transition-all ${s.isPinned ? 'text-workspace-accent bg-workspace-selection' : 'text-workspace-secondary opacity-0 group-hover:opacity-100 hover:bg-workspace-sidebar'}`}
+                    title={s.isPinned ? 'Unpin' : 'Pin to top'}
+                  >
+                    <Pin size={14} fill={s.isPinned ? 'currentColor' : 'none'} />
+                  </button>
+                  <CopyButton content={s.content} className="shadow-none" />
+                </div>
               </div>
 
               <div className="flex-1 bg-slate-900 p-6 overflow-hidden relative">
@@ -220,9 +252,9 @@ export const FridgeApp: React.FC = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setIsModalOpen(false)}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setIsModalOpen(false)}>
           <div className="w-full max-w-2xl bg-white border border-workspace-border rounded-[32px] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
-            <header className="px-10 py-6 border-b border-workspace-border/30 flex justify-between items-center bg-workspace-sidebar/50">
+            <header className="px-6 md:px-10 py-6 border-b border-workspace-border/30 flex justify-between items-center bg-workspace-sidebar/50">
               <div>
                 <span className="text-[10px] font-black text-workspace-accent uppercase tracking-[0.2em] mb-1 block">Storage System</span>
                 <h2 className="text-xl font-black text-workspace-text uppercase tracking-tight">{editingSnippet ? 'Preserve Changes' : 'New Snippet'}</h2>
@@ -232,8 +264,8 @@ export const FridgeApp: React.FC = () => {
               </button>
             </header>
 
-            <form onSubmit={handleSave} className="p-10 space-y-8 overflow-y-auto no-scrollbar">
-              <div className="grid grid-cols-2 gap-8">
+            <form onSubmit={handleSave} className="p-6 md:p-10 space-y-8 overflow-y-auto no-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-workspace-secondary uppercase tracking-widest px-1">Snippet Title</label>
                   <input
