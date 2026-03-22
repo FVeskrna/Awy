@@ -1,0 +1,1 @@
+import{r as n}from"./index-BNmgLa5l.js";const u=(e,s)=>{const[r,a]=n.useState(()=>{const t=localStorage.getItem(`tool_${e}`);if(t===null)return s;try{const o=JSON.parse(t);return typeof s=="string"&&typeof o!="string"?t:o}catch{return t}});return n.useEffect(()=>{localStorage.setItem(`tool_${e}`,JSON.stringify(r))},[r,e]),[r,a]};export{u};
