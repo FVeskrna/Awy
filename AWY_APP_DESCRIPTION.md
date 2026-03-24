@@ -295,4 +295,10 @@ Base:    /Awy/  (vite.config.ts → base: '/Awy/')
 | Services | 16 |
 | Components | ~50 |
 
+---
 
+### Pending Migrations
+
+| Migration file | SQL |
+|---|---|
+| `supabase/migrations/20260322000000_add_snippet_is_pinned.sql` | `ALTER TABLE snippets ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN NOT NULL DEFAULT FALSE;` |
