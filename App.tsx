@@ -15,7 +15,7 @@ const Shell: React.FC = () => {
   const { user, signOutUser } = useAuth();
   const [activeView, setActiveView] = useState<ViewState>('dashboard');
 
-  const installedModuleIds = ['tasks', 'checklist', 'mentalload', 'deepwork', 'notes', 'meeting', 'fridge', 'toolbox', 'music', 'health', 'asset'];
+  const installedModuleIds = ['tasks', 'checklist', 'mentalload', 'deepwork', 'notes', 'meeting', 'fridge', 'toolbox', 'music', 'health', 'asset', 'whiteboard'];
 
   // Support navigation via hash (e.g. from widgets)
   useEffect(() => {

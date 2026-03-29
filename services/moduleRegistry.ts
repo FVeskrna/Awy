@@ -1,7 +1,7 @@
 import {
   CheckSquare, Music, Grid, Wrench, Brain,
   Activity, ListTodo, Zap, IceCream, Globe, Camera, Layers,
-  Plus, Play
+  Plus, Play, LayoutTemplate
 } from 'lucide-react';
 import React from 'react';
 import { ModuleManifest } from '../types';
@@ -17,6 +17,9 @@ import { FridgeWidget, FridgeApp } from '../components/modules/FridgeModule';
 import { MeetingNavigatorWidget, MeetingNavigatorApp } from '../components/modules/MeetingNavigatorModule';
 import { AssetWidget, AssetApp } from '../components/modules/AssetModule';
 import { WorklogStreamWidget, WorklogApp as WorklogStreamApp } from '../components/modules/worklogs';
+import { WhiteboardApp, WhiteboardWidget } from '../components/modules/whiteboard';
+import { TaskRefCard } from '../components/modules/whiteboard/ref-cards/TaskRefCard';
+import { NoteRefCard } from '../components/modules/whiteboard/ref-cards/NoteRefCard';
 
 export const MODULES: Record<string, ModuleManifest> = {
   tasks: {
@@ -27,6 +30,7 @@ export const MODULES: Record<string, ModuleManifest> = {
     AppComponent: TaskApp,
     WidgetComponent: TaskWidget,
     quickAction: { label: 'New Task', hash: '#tasks?action=create', icon: Plus },
+    WhiteboardRefCard: TaskRefCard,
   },
   checklist: {
     id: 'checklist',
@@ -68,6 +72,7 @@ export const MODULES: Record<string, ModuleManifest> = {
     AppComponent: NotesApp,
     WidgetComponent: NotesWidget,
     quickAction: { label: 'New Note', hash: '#notes?action=create', icon: Plus },
+    WhiteboardRefCard: NoteRefCard,
   },
   meeting: {
     id: 'meeting',
@@ -128,6 +133,14 @@ export const MODULES: Record<string, ModuleManifest> = {
     AppComponent: WorklogStreamApp,
     WidgetComponent: WorklogStreamWidget,
     quickAction: { label: 'Log Work', hash: '#worklog?action=log', icon: Plus },
+  },
+  whiteboard: {
+    id: 'whiteboard',
+    name: 'Whiteboard',
+    icon: LayoutTemplate,
+    description: 'Visual infinite canvas for ideas',
+    AppComponent: WhiteboardApp,
+    WidgetComponent: WhiteboardWidget,
   },
 };
 

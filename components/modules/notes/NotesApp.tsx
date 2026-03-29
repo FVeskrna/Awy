@@ -101,7 +101,11 @@ export const NotesApp: React.FC = () => {
         if (hash.includes('?id=')) {
           const id = hash.split('?id=')[1];
           const noteToOpen = n.find((note: Note) => note.id === id);
-          if (noteToOpen) handleOpenModal(noteToOpen);
+          if (noteToOpen) {
+            handleOpenModal(noteToOpen);
+            if (window.history.pushState) window.history.pushState(null, '', '#notes');
+            else window.location.hash = '#notes';
+          }
         } else if (hash.includes('action=create')) {
           handleOpenModal();
           if (window.history.pushState) window.history.pushState(null, '', '#notes');

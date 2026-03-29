@@ -35,6 +35,7 @@ export interface ModuleManifest {
   AppComponent: React.ComponentType;
   WidgetComponent: React.ComponentType<{ isEditMode: boolean }>;
   quickAction?: QuickAction;
+  WhiteboardRefCard?: React.ComponentType<{ refId: string; onClick: () => void; color?: string }>;
 }
 
 export type ViewState = 'dashboard' | 'profile' | string;
