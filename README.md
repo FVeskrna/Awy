@@ -1,5 +1,8 @@
 # AWY — Always With You
+## Live app
+https://fveskrna.github.io/Awy/
 
+The app is live, but registrations are disabled. Please stay tuned for the public release.
 ## What Is It?
 
 AWY is a personal command centre that lives in your browser. Think of it as a private, all-in-one workspace — somewhere between a smart notebook, a developer toolkit, and a daily planner.
