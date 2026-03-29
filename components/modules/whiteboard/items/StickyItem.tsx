@@ -141,6 +141,7 @@ export const StickyItem: React.FC<Props> = ({ item, transform, onUpdate, onDelet
         value={item.content}
         onChange={e => onUpdate({ ...item, content: e.target.value })}
         onPointerDown={e => e.stopPropagation()}
+        onWheel={e => e.stopPropagation()}
         placeholder="Type here..."
         className={`flex-1 w-full p-3 text-xs bg-transparent border-none resize-none outline-none leading-relaxed font-medium placeholder-black/25 ${colors.text}`}
       />
