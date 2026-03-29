@@ -13,7 +13,7 @@ The app adapts between desktop and mobile — on a phone you navigate from a bar
 
 ---
 
-## The 12 Modules
+## The 13 Modules
 
 | Module | What it does |
 |---|---|
@@ -29,6 +29,7 @@ The app adapts between desktop and mobile — on a phone you navigate from a bar
 | **Health** | Monitors your network latency, fetches your public IP, and pings any custom status pages you add. |
 | **Smart Asset** | Warranty and receipt tracker. Upload receipts (with OCR scanning), track purchase dates and warranty expiry. |
 | **Worklog Stream** | Manual work log. Enter what you worked on and for how long — formatted for Jira time tracking. |
+| **Whiteboard** | Infinite visual canvas. Place freeform sticky notes (8 colours, resizable) and pin live references to Tasks and Notes as interactive cards. Multiple boards supported. |
 
 ---
 
@@ -107,6 +108,7 @@ Hash-based routing — no page reloads, works on GitHub Pages without a server.
 #toolbox            Toolbox hub
 #toolbox?tool=json  Open specific tool directly
 #tasks?action=create  Open create modal directly
+#whiteboard         Whiteboard board list
 ```
 
 #### Layout — Desktop vs Mobile
@@ -205,6 +207,24 @@ Asset {
   id, productName, storeName, purchaseDate, price,
   currency, warrantyDurationMonths, receiptUrl, createdAt
 }
+
+Whiteboard {
+  id, name, createdAt
+  items: WhiteboardItem[]
+}
+
+WhiteboardItem = StickyItem | ModuleRefItem
+
+StickyItem {
+  id, type: 'sticky', x, y,
+  color ('yellow' | 'orange' | 'pink' | 'red' | 'blue' | 'teal' | 'green' | 'purple'),
+  content, width?, height?
+}
+
+ModuleRefItem {
+  id, type: 'module_ref', x, y,
+  moduleId ('tasks' | 'notes'), refId, color?
+}
 ```
 
 ---
@@ -227,6 +247,8 @@ Asset {
 | `dashboard_layouts` | Per-user widget grid layout (`layout_json` JSONB) |
 | `user_settings` | Pinned modules, preferences |
 | `system_checks` | Health monitor endpoints |
+| `whiteboards` | Whiteboard board definitions |
+| `whiteboard_items` | Canvas items (stickies and module refs) |
 
 **Storage**
 - Bucket: `receipts` — uploaded receipt images and PDFs
@@ -259,6 +281,7 @@ Provider: Supabase (Google OAuth + Email/Password)
 | `awy_meeting_navigator_locs` | Locations backup |
 | `awy_task_categories` | Custom task categories |
 | `awy_active_day_logs_<DATE>` | Daily worklog cache |
+| `awy_whiteboards` | Whiteboard boards + items backup |
 | `auth_login_timestamp` | Session age tracking |
 
 ---
@@ -292,8 +315,8 @@ Base:    /Awy/  (vite.config.ts → base: '/Awy/')
 
 | Category | Count |
 |---|---|
-| Source files (.ts / .tsx) | ~100 |
-| Modules | 12 |
+| Source files (.ts / .tsx) | ~115 |
+| Modules | 13 |
 | Lazy-loaded tools | 19 |
 | Services | 16 |
 | Components | ~50 |
